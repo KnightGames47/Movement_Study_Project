@@ -41,7 +41,8 @@ public class FirstPerson_Movement : MonoBehaviour, FPS_Input.IPlayerActions
     //This initialization of the movement maps can be done with the 'PlayerInput' component in editor.
     public void OnEnable()
     {
-        if(playerInput == null)
+        Cursor.lockState = CursorLockMode.Locked;
+        if (playerInput == null)
         {
             playerInput = new FPS_Input();
             playerInput.Player.SetCallbacks(this);//We are hooking up the callbacks from the input to the ones here.

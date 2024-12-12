@@ -27,6 +27,7 @@ public class FirstPerson_InputManager : MonoBehaviour
 
     private void OnEnable()
     {
+        Cursor.lockState = CursorLockMode.Locked;
         playerActionsMap.Enable();
     }
 

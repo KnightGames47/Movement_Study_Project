@@ -47,6 +47,7 @@ public class FirstPerson_Rigidbody_Movement : MonoBehaviour, FPS_Input.IPlayerAc
     //This initialization of the movement maps can be done with the 'PlayerInput' component in editor.
     public void OnEnable()
     {
+        Cursor.lockState = CursorLockMode.Locked;
         if (playerInput == null)
         {
             playerInput = new FPS_Input();
