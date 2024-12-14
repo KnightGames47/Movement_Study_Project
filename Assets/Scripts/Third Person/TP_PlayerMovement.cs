@@ -1,89 +1,104 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class TP_PlayerMovement : MonoBehaviour
+[RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
+public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 {
+    public float speed = 5f;
+    public float sprintSpeed = 7f;
+    public float jumpForce = 3f;
+    [Range(0f, 1f)]
+    public float crouchSpeed = 0.5f;
+
     [Header("Movement")]
     public float moveSpeed;
 
     public float groundDrag;
 
-    public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
     private bool readyToJump = true;
 
-    [Header("Keybinds")]
-    public KeyCode jumpKey = KeyCode.Space;
-
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
-    bool grounded;
+    bool isGrounded;
 
     public Transform orientation;
 
-    float horizontalInput;
-    float verticalInput;
+    //float horizontalInput;
+    //float verticalInput;
 
-    Vector3 moveDirection;
+    private float camMovementX;
+    private float camMovementY;
 
-    Rigidbody rb;
+    private bool isSprinting = false;
 
-    private void Start()
+    private bool isCrouching = false;
+    private float crouchTimer = 0f;
+    private bool lerpCrouch = false;
+
+    private Vector3 moveDirection;
+    private Vector3 playerMoveDirection;
+    private Rigidbody rb;
+    private CapsuleCollider capsuleCollider;
+    private FPS_Input playerInput;
+
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
+        capsuleCollider = GetComponent<CapsuleCollider>();
+    }
+
+    //This initialization of the movement maps can be done with the 'PlayerInput' component in editor.
+    public void OnEnable()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        if (playerInput == null)
+        {
+            playerInput = new FPS_Input();
+            playerInput.Player.SetCallbacks(this);//We are hooking up the callbacks from the input to the ones here.
+        }
+
+        playerInput.Player.Enable();
+    }
+
+    public void OnDisable()
+    {
+        playerInput.Player.Disable();
+    }
+
+    private void FixedUpdate()
+    {
+        ProcessMovement();
     }
 
     private void Update()
     {
         // ground check
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        //isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
-        MyInput();
+        CheckGrounded();
+        ProcessCrouch();
+
         SpeedControl();
 
         //handle drag
-        if (grounded)
+        if (isGrounded)
             rb.linearDamping = groundDrag;
         else
             rb.linearDamping = 0;
     }
 
-    private void FixedUpdate()
+    private void ProcessMovement()
     {
-        MovePlayer();
-    }
+        float movementSpeed = speed;
+        if (isSprinting)
+            movementSpeed = sprintSpeed;
 
-    private void MyInput()
-    {
-        //These should be taken care of using the input system
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+        Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
 
-        //when to jump
-        if(Input.GetKey(jumpKey) && readyToJump && grounded)
-        {
-            readyToJump = false;
-            Debug.Log("Jumping");
-            Jump();
-
-            Invoke(nameof(ResetJump), jumpCooldown);
-        }
-    }
-
-    private void MovePlayer()
-    {
-        // Calculate movement direction
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-
-        // on ground
-        if(grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-    
-        // in air
-        else if(!grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+        rb.linearVelocity = new Vector3(moveVector.x, rb.linearVelocity.y, moveVector.z);
     }
 
 
@@ -99,16 +114,72 @@ public class TP_PlayerMovement : MonoBehaviour
         }
     }
 
-    private void Jump()
+    private void ProcessCrouch()
     {
-        // reset y velocity
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        if (lerpCrouch)
+        {
+            crouchTimer += Time.deltaTime;
+            float p = crouchTimer / 1;
+            p *= crouchSpeed;
+            if (isCrouching)
+                capsuleCollider.height = Mathf.Lerp(capsuleCollider.height, 1, p);
+            else
+                capsuleCollider.height = Mathf.Lerp(capsuleCollider.height, 2, p);
 
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+            if (p > 1)
+            {
+                lerpCrouch = false;
+                crouchTimer = 0;
+            }
+        }
+    }
+
+    private void CheckGrounded()
+    {
+        //For the rigid body version of this, we need to check to see if we are grounded manually
+        //isGrounded = Physics.CheckSphere(feetTransform.position, 0.1f, floorMask);
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
     }
 
     private void ResetJump()
     {
         readyToJump = true;
+    }
+
+    public void OnMovement(InputAction.CallbackContext context)
+    {
+        Vector3 moveDir = Vector3.zero;
+        moveDir.x = context.ReadValue<Vector2>().x;
+        moveDir.z = context.ReadValue<Vector2>().y;
+
+        playerMoveDirection = moveDir;
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if(isGrounded && readyToJump)
+        {
+            readyToJump = false;
+            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+    }
+
+    public void OnLook(InputAction.CallbackContext context)
+    {
+        camMovementX = context.ReadValue<Vector2>().x;
+        camMovementY = context.ReadValue<Vector2>().y;
+    }
+
+    public void OnSprint(InputAction.CallbackContext context)
+    {
+        isSprinting = !isSprinting;
+    }
+
+    public void OnCrouch(InputAction.CallbackContext context)
+    {
+        isCrouching = !isCrouching;
+        crouchTimer = 0;
+        lerpCrouch = true;
     }
 }

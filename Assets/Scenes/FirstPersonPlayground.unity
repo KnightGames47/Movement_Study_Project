@@ -295,7 +295,6 @@ GameObject:
   - component: {fileID: 6807591}
   - component: {fileID: 6807594}
   - component: {fileID: 6807593}
-  - component: {fileID: 6807592}
   m_Layer: 0
   m_Name: PlayerObj
   m_TagString: Untagged
@@ -319,29 +318,6 @@ Transform:
   - {fileID: 1113607336}
   m_Father: {fileID: 2086249733}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &6807592
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6807590}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &6807593
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -11360,6 +11336,7 @@ GameObject:
   - component: {fileID: 2086249733}
   - component: {fileID: 2086249732}
   - component: {fileID: 2086249734}
+  - component: {fileID: 2086249735}
   m_Layer: 0
   m_Name: TP_Player_RB_01
   m_TagString: Untagged
@@ -11391,9 +11368,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 112
-  m_CollisionDetection: 1
+  m_CollisionDetection: 2
 --- !u!4 &2086249733
 Transform:
   m_ObjectHideFlags: 0
@@ -11423,17 +11400,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a136e0184019bb544aea06a806394075, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 5
+  sprintSpeed: 7
+  jumpForce: 8
+  crouchSpeed: 0.5
   moveSpeed: 7
   groundDrag: 5
-  jumpForce: 8
   jumpCooldown: 0.25
   airMultiplier: 0.4
-  jumpKey: 32
   playerHeight: 2
   whatIsGround:
     serializedVersion: 2
     m_Bits: 64
   orientation: {fileID: 1814116239}
+--- !u!136 &2086249735
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2086249731}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2111220201
 GameObject:
   m_ObjectHideFlags: 0
