@@ -4,39 +4,33 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
 public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 {
+    [Header("Movement")]
     public float speed = 5f;
     public float sprintSpeed = 7f;
     public float jumpForce = 3f;
+    public float jumpCooldown;
     [Range(0f, 1f)]
     public float crouchSpeed = 0.5f;
-
-    [Header("Movement")]
-    public float moveSpeed;
-
-    public float groundDrag;
-
-    public float jumpCooldown;
-    public float airMultiplier;
-    private bool readyToJump = true;
+    public float rotationSpeed;
 
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
-    bool isGrounded;
 
-    public Transform orientation;
-
-    //float horizontalInput;
-    //float verticalInput;
+    [Header("References")]
+    public Transform player;
+    public Camera mainCam;
 
     private float camMovementX;
     private float camMovementY;
 
+    private bool readyToJump = true;
+    private bool isGrounded = true;
     private bool isSprinting = false;
 
     private bool isCrouching = false;
-    private float crouchTimer = 0f;
     private bool lerpCrouch = false;
+    private float crouchTimer = 0f;
 
     private Vector3 moveDirection;
     private Vector3 playerMoveDirection;
@@ -54,6 +48,7 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     public void OnEnable()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
         if (playerInput == null)
         {
             playerInput = new FPS_Input();
@@ -71,6 +66,7 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     private void FixedUpdate()
     {
         ProcessMovement();
+        OnLook();
     }
 
     private void Update()
@@ -80,14 +76,15 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
         CheckGrounded();
         ProcessCrouch();
+    }
 
-        SpeedControl();
+    private void OnLook()
+    {
+        //This needs to be the camera
+        Vector3 viewDir = player.position - new Vector3(mainCam.transform.position.x, player.position.y, mainCam.transform.position.z);
 
-        //handle drag
-        if (isGrounded)
-            rb.linearDamping = groundDrag;
-        else
-            rb.linearDamping = 0;
+        if (viewDir != Vector3.zero)
+            player.forward = Vector3.Slerp(player.forward, viewDir.normalized, Time.deltaTime * rotationSpeed);
     }
 
     private void ProcessMovement()
@@ -99,19 +96,6 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
         Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
 
         rb.linearVelocity = new Vector3(moveVector.x, rb.linearVelocity.y, moveVector.z);
-    }
-
-
-    private void SpeedControl()
-    {
-        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        
-        //limit velocity if needed
-        if(flatVel.magnitude > moveSpeed)
-        {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
-            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
-        }
     }
 
     private void ProcessCrouch()
@@ -138,6 +122,7 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     {
         //For the rigid body version of this, we need to check to see if we are grounded manually
         //isGrounded = Physics.CheckSphere(feetTransform.position, 0.1f, floorMask);
+        //Using the raycast instead of sphere cast
         isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
     }
 
