@@ -19,10 +19,9 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
     [Header("References")]
     public Transform player;
+    public Transform playerObject;
+    public Transform orientation;
     public Camera mainCam;
-
-    private float camMovementX;
-    private float camMovementY;
 
     private bool readyToJump = true;
     private bool isGrounded = true;
@@ -66,25 +65,12 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     private void FixedUpdate()
     {
         ProcessMovement();
-        OnLook();
     }
 
     private void Update()
     {
-        // ground check
-        //isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
-
         CheckGrounded();
         ProcessCrouch();
-    }
-
-    private void OnLook()
-    {
-        //This needs to be the camera
-        Vector3 viewDir = player.position - new Vector3(mainCam.transform.position.x, player.position.y, mainCam.transform.position.z);
-
-        if (viewDir != Vector3.zero)
-            player.forward = Vector3.Slerp(player.forward, viewDir.normalized, Time.deltaTime * rotationSpeed);
     }
 
     private void ProcessMovement()
@@ -92,6 +78,12 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
         float movementSpeed = speed;
         if (isSprinting)
             movementSpeed = sprintSpeed;
+
+        //we want the movement direction to be based around our orientation.forward, not the player forward
+
+        if (playerMoveDirection != Vector3.zero)
+            playerObject.forward = Vector3.Slerp(playerObject.forward, playerMoveDirection.normalized, Time.deltaTime * rotationSpeed);
+        
 
         Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
 
@@ -152,8 +144,8 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
     public void OnLook(InputAction.CallbackContext context)
     {
-        camMovementX = context.ReadValue<Vector2>().x;
-        camMovementY = context.ReadValue<Vector2>().y;
+        Vector3 viewDir = player.position - new Vector3(mainCam.transform.position.x, player.position.y, mainCam.transform.position.z);
+        orientation.forward = viewDir.normalized;
     }
 
     public void OnSprint(InputAction.CallbackContext context)
