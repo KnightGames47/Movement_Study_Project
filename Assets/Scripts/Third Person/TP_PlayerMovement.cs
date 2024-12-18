@@ -81,8 +81,11 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
         //we want the movement direction to be based around our orientation.forward, not the player forward
 
+        //This is for the player look movement direction
         if (playerMoveDirection != Vector3.zero)
-            playerObject.forward = Vector3.Slerp(playerObject.forward, playerMoveDirection.normalized, Time.deltaTime * rotationSpeed);
+        {
+            playerObject.forward = Vector3.Slerp(playerObject.forward, playerMoveDirection, Time.deltaTime * rotationSpeed);
+        }
         
 
         Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
@@ -125,11 +128,10 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
     public void OnMovement(InputAction.CallbackContext context)
     {
-        Vector3 moveDir = Vector3.zero;
-        moveDir.x = context.ReadValue<Vector2>().x;
-        moveDir.z = context.ReadValue<Vector2>().y;
+        playerMoveDirection = (orientation.forward * context.ReadValue<Vector2>().y) +
+            (orientation.right * context.ReadValue<Vector2>().x);
 
-        playerMoveDirection = moveDir;
+        playerMoveDirection.Normalize();
     }
 
     public void OnJump(InputAction.CallbackContext context)
