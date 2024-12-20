@@ -84,13 +84,15 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
         //This is for the player look movement direction
         if (playerMoveDirection != Vector3.zero)
         {
-            playerObject.forward = Vector3.Slerp(playerObject.forward, playerMoveDirection, Time.deltaTime * rotationSpeed);
+            Vector3 moveVectorDir = (orientation.forward * playerMoveDirection.z) + (orientation.right * playerMoveDirection.x);
+            //Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
+
+            playerObject.forward = Vector3.Slerp(playerObject.forward, moveVectorDir, Time.deltaTime * rotationSpeed);
+
+            moveVectorDir *= movementSpeed;
+
+            rb.linearVelocity = new Vector3(moveVectorDir.x, rb.linearVelocity.y, moveVectorDir.z);
         }
-        
-
-        Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
-
-        rb.linearVelocity = new Vector3(moveVector.x, rb.linearVelocity.y, moveVector.z);
     }
 
     private void ProcessCrouch()
@@ -128,10 +130,16 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
     public void OnMovement(InputAction.CallbackContext context)
     {
-        playerMoveDirection = (orientation.forward * context.ReadValue<Vector2>().y) +
-            (orientation.right * context.ReadValue<Vector2>().x);
+        //playerMoveDirection = (orientation.forward * context.ReadValue<Vector2>().y) +
+        //    (orientation.right * context.ReadValue<Vector2>().x);
 
-        playerMoveDirection.Normalize();
+        //playerMoveDirection.Normalize();
+
+        Vector3 moveDir = Vector3.zero;
+        moveDir.x = context.ReadValue<Vector2>().x;
+        moveDir.z = context.ReadValue<Vector2>().y;
+
+        playerMoveDirection = moveDir;
     }
 
     public void OnJump(InputAction.CallbackContext context)
