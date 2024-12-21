@@ -49,6 +49,7 @@ public class TP_CC_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     public void OnEnable()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
         if (playerInput == null)
         {
             playerInput = new FPS_Input();
@@ -66,7 +67,6 @@ public class TP_CC_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     private void FixedUpdate()
     {
         ProcessMovement();
-
         ProcessGravity();
     }
 
@@ -85,7 +85,18 @@ public class TP_CC_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
         if (isSprinting)
             movementSpeed = sprintSpeed;
 
-        characterController.Move(transform.TransformDirection(playerMoveDirection) * movementSpeed * Time.deltaTime);
+        Vector3 moveVectorDir = new Vector3();
+        //This is for the player look movement direction
+        if (playerMoveDirection != Vector3.zero)
+        {
+            moveVectorDir = (orientation.forward * playerMoveDirection.z) + (orientation.right * playerMoveDirection.x);
+            
+            playerObject.forward = Vector3.Slerp(playerObject.forward, moveVectorDir, Time.deltaTime * rotationSpeed);
+
+            moveVectorDir *= movementSpeed;
+        }
+
+        characterController.Move(transform.TransformDirection(moveVectorDir) * Time.deltaTime);
     }
 
     private void ProcessGravity()
@@ -151,7 +162,11 @@ public class TP_CC_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
     public void OnMovement(InputAction.CallbackContext context)
     {
-        throw new System.NotImplementedException();
+        Vector3 moveDir = Vector3.zero;
+        moveDir.x = context.ReadValue<Vector2>().x;
+        moveDir.z = context.ReadValue<Vector2>().y;
+
+        playerMoveDirection = moveDir;
     }
 
     public void OnSprint(InputAction.CallbackContext context)

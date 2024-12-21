@@ -85,7 +85,6 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
         if (playerMoveDirection != Vector3.zero)
         {
             moveVectorDir = (orientation.forward * playerMoveDirection.z) + (orientation.right * playerMoveDirection.x);
-            //Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
 
             playerObject.forward = Vector3.Slerp(playerObject.forward, moveVectorDir, Time.deltaTime * rotationSpeed);
 
@@ -130,11 +129,6 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
 
     public void OnMovement(InputAction.CallbackContext context)
     {
-        //playerMoveDirection = (orientation.forward * context.ReadValue<Vector2>().y) +
-        //    (orientation.right * context.ReadValue<Vector2>().x);
-
-        //playerMoveDirection.Normalize();
-
         Vector3 moveDir = Vector3.zero;
         moveDir.x = context.ReadValue<Vector2>().x;
         moveDir.z = context.ReadValue<Vector2>().y;
