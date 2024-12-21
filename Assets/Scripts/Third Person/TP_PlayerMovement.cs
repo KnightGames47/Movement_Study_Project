@@ -80,19 +80,19 @@ public class TP_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
             movementSpeed = sprintSpeed;
 
         //we want the movement direction to be based around our orientation.forward, not the player forward
-
+        Vector3 moveVectorDir = new Vector3();
         //This is for the player look movement direction
         if (playerMoveDirection != Vector3.zero)
         {
-            Vector3 moveVectorDir = (orientation.forward * playerMoveDirection.z) + (orientation.right * playerMoveDirection.x);
+            moveVectorDir = (orientation.forward * playerMoveDirection.z) + (orientation.right * playerMoveDirection.x);
             //Vector3 moveVector = transform.TransformDirection(playerMoveDirection) * movementSpeed;
 
             playerObject.forward = Vector3.Slerp(playerObject.forward, moveVectorDir, Time.deltaTime * rotationSpeed);
 
             moveVectorDir *= movementSpeed;
-
-            rb.linearVelocity = new Vector3(moveVectorDir.x, rb.linearVelocity.y, moveVectorDir.z);
         }
+
+        rb.linearVelocity = new Vector3(moveVectorDir.x, rb.linearVelocity.y, moveVectorDir.z);
     }
 
     private void ProcessCrouch()
