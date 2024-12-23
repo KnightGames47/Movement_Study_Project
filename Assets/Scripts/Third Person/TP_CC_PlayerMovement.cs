@@ -173,5 +173,10 @@ public class TP_CC_PlayerMovement : MonoBehaviour, FPS_Input.IPlayerActions
     {
         isSprinting = !isSprinting;
     }
+
+    public void OnChangeCamera(InputAction.CallbackContext context)
+    {
+        throw new System.NotImplementedException();
+    }
     #endregion
 }

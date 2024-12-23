@@ -160,6 +160,11 @@ public class FirstPerson_Movement : MonoBehaviour, FPS_Input.IPlayerActions
         crouchTimer = 0;
         lerpCrouch = true;
     }
+
+    public void OnChangeCamera(InputAction.CallbackContext context)
+    {
+        throw new System.NotImplementedException();
+    }
     #endregion
 }
 

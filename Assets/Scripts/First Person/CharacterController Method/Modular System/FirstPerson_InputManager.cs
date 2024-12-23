@@ -23,6 +23,7 @@ public class FirstPerson_InputManager : MonoBehaviour
         playerActionsMap.Jump.performed += ctx => playerMover.OnJump();
         playerActionsMap.Sprint.performed += ctx => playerMover.OnSprint();
         playerActionsMap.Crouch.performed += ctx => playerMover.OnCrouch();
+        //Add something here for camera changing
     }
 
     private void OnEnable()

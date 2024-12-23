@@ -156,4 +156,9 @@ public class FirstPerson_Rigidbody_Movement : MonoBehaviour, FPS_Input.IPlayerAc
     {
         isSprinting = !isSprinting;
     }
+
+    public void OnChangeCamera(InputAction.CallbackContext context)
+    {
+        throw new System.NotImplementedException();
+    }
 }
