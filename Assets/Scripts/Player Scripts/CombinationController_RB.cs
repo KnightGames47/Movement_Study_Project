@@ -1,3 +1,4 @@
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static TP_PlayerMovement;
@@ -15,18 +16,23 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
     public float rotationSpeed;
 
     [Header("First Person Camera")]
-    public Camera firstPersonCam;
+    public CinemachineCamera firstPersonCam;
     public float xSensitivity = 30f;
     public float ySensitivity = 30f;
     public float minClampX = -80f;
     public float maxClampX = 80f;
+
+    [Header("Third Person Cameras")]
+    public CinemachineCamera basicTPCam;
+    public CinemachineCamera combatTPCam;
+    public CinemachineCamera topdownTPCam;
 
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
 
     [Header("References")]
-    public Camera basicTPCam;
+    public CinemachineCamera[] allCameras;
     public Transform player;
     public Transform playerObject;
     public Transform orientation;
@@ -54,8 +60,8 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
     private CapsuleCollider capsuleCollider;
     private FPS_Input playerInput;
 
-    [SerializeField]
-    private CameraStyle currentStyle;
+    [HideInInspector]
+    public CameraStyle currentStyle;
 
     public enum CameraStyle
     {
@@ -94,14 +100,19 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
 
     private void FixedUpdate()
     {
-        if (currentStyle == CameraStyle.FirstPerson)
-            ProcessLook();
+        //if (currentStyle == CameraStyle.FirstPerson)
+        //    ProcessLook();
 
-        ProcessMovement();
+        //ProcessMovement();
     }
 
     private void Update()
     {
+        if (currentStyle == CameraStyle.FirstPerson)
+            ProcessLook();
+
+        ProcessMovement();
+
         CheckGrounded();//we are checking if we are grouned each frame
 
         ProcessCrouch();
@@ -122,26 +133,26 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
         {
             moveVectorDir = (orientation.forward * playerMoveDirection.z) + (orientation.right * playerMoveDirection.x);
 
-            if (currentStyle == CameraStyle.Basic_TP)
+            if (currentStyle == CameraStyle.Basic_TP || currentStyle == CameraStyle.Topdown_TP)
                 playerObject.forward = Vector3.Slerp(playerObject.forward, moveVectorDir, Time.deltaTime * rotationSpeed);
 
             moveVectorDir *= movementSpeed;
         }
 
-        if (currentStyle == CameraStyle.Combat_TP)
+        if (currentStyle == CameraStyle.Combat_TP || currentStyle == CameraStyle.FirstPerson)
             playerObject.forward = orientation.forward;
 
         rb.linearVelocity = new Vector3(moveVectorDir.x, rb.linearVelocity.y, moveVectorDir.z);
     }
 
+    //only used for first person
     private void ProcessLook()
     {
         xRotation -= (camMovementY * Time.deltaTime) * ySensitivity;
         xRotation = Mathf.Clamp(xRotation, minClampX, maxClampX);
-        basicTPCam.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);//rotates the camera up and down
+        firstPersonCam.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);//rotates the camera up and down
 
         transform.Rotate(Vector3.up * (camMovementX * Time.deltaTime) * xSensitivity);//rotate the player to look left and right
-
     }
 
     
@@ -186,11 +197,25 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
             currentStyle++;
             if ((int)currentStyle == System.Enum.GetValues(typeof(CameraStyle)).Length) currentStyle = 0;
 
-            if(currentStyle == CameraStyle.FirstPerson)
+            foreach(var cam in allCameras)//turn all cameras off
             {
-                firstPersonCam.enabled = true;
-                basicTPCam.enabled = false;
-                //we will need to turn off all of the other cams as well...
+                cam.Priority = 0;
+            }
+
+            switch (currentStyle)
+            {
+                case CameraStyle.FirstPerson:
+                    firstPersonCam.Priority = 10;
+                    break;
+                case CameraStyle.Basic_TP:
+                    basicTPCam.Priority = 10;
+                    break;
+                case CameraStyle.Combat_TP:
+                    combatTPCam.Priority = 10;
+                    break;
+                case CameraStyle.Topdown_TP:
+                    topdownTPCam.Priority = 10;
+                    break;
             }
         }
     }
@@ -221,8 +246,18 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
         }
         else if (currentStyle == CameraStyle.Combat_TP)
         {
-            Vector3 viewDir = combatLookAt.position - new Vector3(basicTPCam.transform.position.x, combatLookAt.position.y, basicTPCam.transform.position.z);
+            Vector3 viewDir = combatLookAt.position - new Vector3(combatTPCam.transform.position.x, combatLookAt.position.y, combatTPCam.transform.position.z);
             orientation.forward = viewDir.normalized;
+        }
+        else if(currentStyle == CameraStyle.Topdown_TP)
+        {
+            Vector3 viewDir = player.position - new Vector3(topdownTPCam.transform.position.x, player.position.y, topdownTPCam.transform.position.z);
+            orientation.forward = viewDir.normalized;
+        }
+        else if (currentStyle == CameraStyle.FirstPerson)
+        {
+            camMovementX = context.ReadValue<Vector2>().x;
+            camMovementY = context.ReadValue<Vector2>().y;
         }
     }
 
