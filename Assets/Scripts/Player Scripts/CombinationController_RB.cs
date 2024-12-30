@@ -100,19 +100,14 @@ public class CombinationController_RB : MonoBehaviour, FPS_Input.IPlayerActions
 
     private void FixedUpdate()
     {
-        //if (currentStyle == CameraStyle.FirstPerson)
-        //    ProcessLook();
-
-        //ProcessMovement();
-    }
-
-    private void Update()
-    {
         if (currentStyle == CameraStyle.FirstPerson)
             ProcessLook();
 
         ProcessMovement();
+    }
 
+    private void Update()
+    {
         CheckGrounded();//we are checking if we are grouned each frame
 
         ProcessCrouch();
